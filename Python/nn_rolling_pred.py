@@ -266,7 +266,7 @@ def runoneday(inp):
 
     
     file_name = datetime.strftime(df.index[-24], '%Y-%m-%d')
-    json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', f'{file_name}.json'), 'w'))
+    # json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', f'{file_name}.json'), 'w'))
     pred = model.predict(np.tile(Xf, (10000, 1)))
     predDF = pd.DataFrame(index=df.index[-24:])
     predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
@@ -286,7 +286,7 @@ def runoneday(inp):
     predDF.loc[predDF.index[:], 'lower_bound_90'] = lower_bound_90
     predDF.loc[predDF.index[:], 'upper_bound_90'] = upper_bound_90
     
-    np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
+    # np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
 
 
     return predDF
@@ -307,6 +307,14 @@ for e in (inputlist):
     prediction = runoneday(e)
     print("Prediction result")
     print(prediction)
+
+    # create directory if it does not exist
+    if not os.path.exists(f'../forecasts_probNN_{distribution.lower()}_t1'):
+        os.mkdir(f'../forecasts_probNN_{distribution.lower()}_t1')
+
+    # save prediction to json file
+    file_name = datetime.strftime(prediction.index[-24], '%Y-%m-%d')
+    prediction.to_json(os.path.join(f'../forecasts_probNN_{distribution.lower()}_t1', f'{file_name}.json'), orient='index')
 
 # with Pool(max(os.cpu_count() // 4, 1)) as p:
 #     _ = p.map(runoneday, inputlist)
