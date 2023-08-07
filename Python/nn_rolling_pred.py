@@ -56,21 +56,38 @@ if distribution not in paramcount:
 # read data file
 data = pd.read_csv(f'../Datasets/{cty}.csv', index_col=0)
 data.index = [datetime.strptime(e, '%Y-%m-%d %H:%M:%S') for e in data.index]
-# data = data.iloc[:4*364*24] # take the first 4 years - 1456 days
+
+days_to_predict = 3
+training_days = len(data) // 24 - days_to_predict
+
+
+print("Days in data set:", (len(data) // 24))
+print("Days in training set:", training_days)
 
 def runoneday(inp):
     params, dayno = inp
-    df = data.iloc[dayno*24:dayno*24+1456*24+24]
+
+    print("Day number ", dayno)
+
+    df = data.iloc[dayno*24:dayno*24+training_days*24+24]
+
+
+    
+
+    # print first and last date of df
+    print(df.index[0], df.index[-1])
+
+
     # prepare the input/output dataframes
-    Y = np.zeros((1456, 24))
+    Y = np.zeros((training_days, 24))
     # Yf = np.zeros((1, 24)) # no Yf for rolling prediction
-    for d in range(1456):
+    for d in range(training_days):
         Y[d, :] = df.loc[df.index[d*24:(d+1)*24], 'Price'].to_numpy()
     Y = Y[7:, :] # skip first 7 days
     # for d in range(1):
     #     Yf[d, :] = df.loc[df.index[(d+1092)*24:(d+1093)*24], 'Price'].to_numpy()
-    X = np.zeros((1456+1, INP_SIZE))
-    for d in range(7, 1456+1):
+    X = np.zeros((training_days+1, INP_SIZE))
+    for d in range(7, training_days+1):
         X[d, :24] = df.loc[df.index[(d-1)*24:(d)*24], 'Price'].to_numpy() # D-1 price
         X[d, 24:48] = df.loc[df.index[(d-2)*24:(d-1)*24], 'Price'].to_numpy() # D-2 price
         X[d, 48:72] = df.loc[df.index[(d-3)*24:(d-2)*24], 'Price'].to_numpy() # D-3 price
@@ -235,6 +252,8 @@ def runoneday(inp):
 
     # pred = model.predict(Xf)[0]
     if paramcount[distribution] is not None:
+        print("Distribution top")
+        # analyse Xf
         dist = model(Xf)
         if distribution == 'Normal':
             getters = {'loc': dist.loc, 'scale': dist.scale}
@@ -243,40 +262,44 @@ def runoneday(inp):
         elif distribution in {'JSU', 'SinhArcsinh', 'NormalInverseGaussian'}:
             getters = {'loc': dist.loc, 'scale': dist.scale, 
                        'tailweight': dist.tailweight, 'skewness': dist.skewness}
-        print(getters)
         params = {k: [float(e) for e in v.numpy()[0]] for k, v in getters.items()}
-        print(params)
-        json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', datetime.strftime(df.index[-24], '%Y-%m-%d')), 'w'))
+        file_name = datetime.strftime(df.index[-24], '%Y-%m-%d')
+        json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', f'{file_name}.json'), 'w'))
         pred = model.predict(np.tile(Xf, (10000, 1)))
         predDF = pd.DataFrame(index=df.index[-24:])
         predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
         predDF['forecast'] = pd.NA
         predDF.loc[predDF.index[:], 'forecast'] = pred.mean(0)
-        # predDF.to_csv(os.path.join('../forecasts', datetime.strftime(df.index[-24], '%Y-%m-%d')))
-        np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', datetime.strftime(df.index[-24], '%Y-%m-%d')), pred, delimiter=',', fmt='%.3f')
+        
+        np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
     else:
+        print("Distribution down")
+        pred = model.predict(Xf)
         predDF = pd.DataFrame(index=df.index[-24:])
         predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
         predDF['forecast'] = pd.NA
         predDF.loc[predDF.index[:], 'forecast'] = model.predict(Xf)[0]
-        pred = model.predict(Xf)
+        
         np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', datetime.strftime(df.index[-24], '%Y-%m-%d')), pred, delimiter=',', fmt='%.3f')
-    print(predDF)
+
     return predDF
 
 optuna.logging.get_logger('optuna').addHandler(logging.StreamHandler(sys.stdout))
 study_name = f'FINAL_DE_selection_prob_{distribution.lower()}' # 'on_new_data_no_feature_selection'
 storage_name = f'sqlite:///../trialfiles/{study_name}'
 study = optuna.create_study(study_name=study_name, storage=storage_name, load_if_exists=True)
-print(study.trials_dataframe())
+# print(study.trials_dataframe())
 best_params = study.best_params
-print(best_params)
+# print(best_params)
 
-inputlist = [(best_params, day) for day in range(len(data) // 24 - 1456)]
-print(len(inputlist))
 
-# for e in inputlist:
-#     _ = runoneday(e)
 
-with Pool(max(os.cpu_count() // 4, 1)) as p:
-    _ = p.map(runoneday, inputlist)
+inputlist = [(best_params, day) for day in range(0, len(data) // 24 - training_days)]
+
+for e in (inputlist):
+    prediction = runoneday(e)
+    print("Prediction result")
+    print(prediction)
+
+# with Pool(max(os.cpu_count() // 4, 1)) as p:
+#     _ = p.map(runoneday, inputlist)
