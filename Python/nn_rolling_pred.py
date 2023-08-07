@@ -57,7 +57,7 @@ if distribution not in paramcount:
 data = pd.read_csv(f'../Datasets/{cty}.csv', index_col=0)
 data.index = [datetime.strptime(e, '%Y-%m-%d %H:%M:%S') for e in data.index]
 
-days_to_predict = 5
+days_to_predict = 200
 training_days = len(data) // 24 - days_to_predict
 
 
@@ -272,6 +272,19 @@ def runoneday(inp):
     predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
     predDF['forecast'] = pd.NA
     predDF.loc[predDF.index[:], 'forecast'] = pred.mean(0)
+
+    # print shape of pred
+    print(pred.shape)
+
+    # Calculate the 5th and 95th percentiles for each hour to get the 90% Prediction Intervals
+    lower_bound_90 = np.percentile(pred, 5, axis=0)
+    upper_bound_90 = np.percentile(pred, 95, axis=0)
+
+    # add the 90% Prediction Intervals to the dataframe
+    predDF['lower_bound_90'] = pd.NA
+    predDF['upper_bound_90'] = pd.NA
+    predDF.loc[predDF.index[:], 'lower_bound_90'] = lower_bound_90
+    predDF.loc[predDF.index[:], 'upper_bound_90'] = upper_bound_90
     
     np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
 
