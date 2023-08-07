@@ -37,14 +37,14 @@ if len(sys.argv) > 1:
 if len(sys.argv) > 2:
     distribution = sys.argv[2]
 
-if not os.path.exists(f'../forecasts_probNN_{distribution.lower()}'):
-    os.mkdir(f'../forecasts_probNN_{distribution.lower()}')
+# if not os.path.exists(f'../forecasts_probNN_{distribution.lower()}'):
+#     os.mkdir(f'../forecasts_probNN_{distribution.lower()}')
 
-if not os.path.exists(f'../distparams_probNN_{distribution.lower()}'):
-    os.mkdir(f'../distparams_probNN_{distribution.lower()}')
+# if not os.path.exists(f'../distparams_probNN_{distribution.lower()}'):
+#     os.mkdir(f'../distparams_probNN_{distribution.lower()}')
 
-if not os.path.exists(f'../trialfiles'):
-    os.mkdir(f'../trialfiles')
+# if not os.path.exists(f'../trialfiles'):
+#     os.mkdir(f'../trialfiles')
 
 print(cty, distribution)
 
@@ -308,13 +308,15 @@ for e in (inputlist):
     print("Prediction result")
     print(prediction)
 
+    # path_name = f'../forecasts_probNN_{distribution.lower()}_t1'
+    path_name = f'../forecasts_dnn'
     # create directory if it does not exist
-    if not os.path.exists(f'../forecasts_probNN_{distribution.lower()}_t1'):
-        os.mkdir(f'../forecasts_probNN_{distribution.lower()}_t1')
+    if not os.path.exists(path_name):
+        os.mkdir(path_name)
 
-    # save prediction to json file
+    # append the prediction to a json file
     file_name = datetime.strftime(prediction.index[-24], '%Y-%m-%d')
-    prediction.to_json(os.path.join(f'../forecasts_probNN_{distribution.lower()}_t1', f'{file_name}.json'), orient='index')
+    prediction.to_json(os.path.join(path_name, f'{file_name}.json'))
 
 # with Pool(max(os.cpu_count() // 4, 1)) as p:
 #     _ = p.map(runoneday, inputlist)
