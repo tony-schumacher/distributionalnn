@@ -57,7 +57,7 @@ if distribution not in paramcount:
 data = pd.read_csv(f'../Datasets/{cty}.csv', index_col=0)
 data.index = [datetime.strptime(e, '%Y-%m-%d %H:%M:%S') for e in data.index]
 
-days_to_predict = 3
+days_to_predict = 5
 training_days = len(data) // 24 - days_to_predict
 
 
@@ -251,36 +251,30 @@ def runoneday(inp):
     # we optimize the returned value, -1 will always take the model with best MAE
 
     # pred = model.predict(Xf)[0]
-    if paramcount[distribution] is not None:
-        print("Distribution top")
-        # analyse Xf
-        dist = model(Xf)
-        if distribution == 'Normal':
-            getters = {'loc': dist.loc, 'scale': dist.scale}
-        elif distribution == 'StudentT':
-            getters = {'loc': dist.loc, 'scale': dist.scale, 'df': dist.df}
-        elif distribution in {'JSU', 'SinhArcsinh', 'NormalInverseGaussian'}:
-            getters = {'loc': dist.loc, 'scale': dist.scale, 
-                       'tailweight': dist.tailweight, 'skewness': dist.skewness}
-        params = {k: [float(e) for e in v.numpy()[0]] for k, v in getters.items()}
-        file_name = datetime.strftime(df.index[-24], '%Y-%m-%d')
-        json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', f'{file_name}.json'), 'w'))
-        pred = model.predict(np.tile(Xf, (10000, 1)))
-        predDF = pd.DataFrame(index=df.index[-24:])
-        predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
-        predDF['forecast'] = pd.NA
-        predDF.loc[predDF.index[:], 'forecast'] = pred.mean(0)
-        
-        np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
-    else:
-        print("Distribution down")
-        pred = model.predict(Xf)
-        predDF = pd.DataFrame(index=df.index[-24:])
-        predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
-        predDF['forecast'] = pd.NA
-        predDF.loc[predDF.index[:], 'forecast'] = model.predict(Xf)[0]
-        
-        np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', datetime.strftime(df.index[-24], '%Y-%m-%d')), pred, delimiter=',', fmt='%.3f')
+    
+    print("Distribution top")
+    # analyse Xf
+    dist = model(Xf)
+    if distribution == 'Normal':
+        getters = {'loc': dist.loc, 'scale': dist.scale}
+    elif distribution == 'StudentT':
+        getters = {'loc': dist.loc, 'scale': dist.scale, 'df': dist.df}
+    elif distribution in {'JSU', 'SinhArcsinh', 'NormalInverseGaussian'}:
+        getters = {'loc': dist.loc, 'scale': dist.scale, 
+                    'tailweight': dist.tailweight, 'skewness': dist.skewness}
+    params = {k: [float(e) for e in v.numpy()[0]] for k, v in getters.items()}
+
+    
+    file_name = datetime.strftime(df.index[-24], '%Y-%m-%d')
+    json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', f'{file_name}.json'), 'w'))
+    pred = model.predict(np.tile(Xf, (10000, 1)))
+    predDF = pd.DataFrame(index=df.index[-24:])
+    predDF['real'] = df.loc[df.index[-24:], 'Price'].to_numpy()
+    predDF['forecast'] = pd.NA
+    predDF.loc[predDF.index[:], 'forecast'] = pred.mean(0)
+    
+    np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
+
 
     return predDF
 
