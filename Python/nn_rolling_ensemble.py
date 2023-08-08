@@ -50,7 +50,7 @@ if distribution not in paramcount:
 data = pd.read_csv(f"../Datasets/{cty}.csv", index_col=0)
 data.index = [datetime.strptime(e, "%Y-%m-%d %H:%M:%S") for e in data.index]
 
-days_to_predict = 200
+days_to_predict = 10
 training_days = len(data) // 24 - days_to_predict
 
 
@@ -344,7 +344,9 @@ def runoneday(inp):
     return predDF
 
 
-def use_study(study, study_name):
+def use_study(study_config):
+    study, study_name = study_config
+    print(f"Using study {study_name}")
     inputlist = [
         (study.best_params, day) for day in range(0, len(data) // 24 - training_days)
     ]
@@ -386,16 +388,18 @@ def use_study(study, study_name):
 
         # existing_data to csv file
         existing_data_df = pd.DataFrame.from_dict(existing_data, orient="index")
-        existing_data_df.to_csv(
-            os.path.join(path_name, f"prediction_{study_name}.csv")
-        )
+        existing_data_df.to_csv(os.path.join(path_name, f"prediction_{study_name}.csv"))
 
     # with Pool(max(os.cpu_count() // 4, 1)) as p:
     #     _ = p.map(runoneday, inputlist)
 
 
-# iterate over all xy studies
-for study, study_name in load_studies(base_name="FINAL_DE_selection_prob_jsu", count=4):
-    print(f"Using study {study_name}")
-    use_study(study, study_name)
-    # todo run studies in parallel
+
+
+if __name__ == '__main__':
+    study_count = 4
+    study_configs = load_studies(base_name="FINAL_DE_selection_prob_jsu", count=study_count)
+
+    # Use a Pool with 4 processes to run the use_studies function in parallel
+    with Pool(4) as p:
+        _ = p.map(use_study, study_configs)
