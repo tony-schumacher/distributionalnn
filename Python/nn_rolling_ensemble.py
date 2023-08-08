@@ -344,12 +344,58 @@ def runoneday(inp):
     return predDF
 
 
+def use_study(study, study_name):
+    inputlist = [
+        (study.best_params, day) for day in range(0, len(data) // 24 - training_days)
+    ]
+
+    file_name = f"prediction_{study_name}.json"
+    path_name = "../forecasts_ddnn"
+    file_path = os.path.join(path_name, file_name)
+    # create directory if it does not exist
+    if not os.path.exists(path_name):
+        os.mkdir(path_name)
+
+    # Read existing data from the JSON file
+    if os.path.exists(file_path):
+        with open(file_path, "r") as file:
+            existing_data = json.load(file)
+    else:
+        existing_data = {}
+
+    for e in inputlist:
+        prediction = runoneday(e)
+        print(prediction)
+
+        # Convert the index to a DateTime object (if it's in Unix timestamp format)
+        prediction.index = pd.to_datetime(prediction.index, unit="ms")
+
+        # Convert the entire index to strings in your desired format (e.g., "YYYY-MM-DD HH:MM:SS")
+        prediction.index = prediction.index.strftime("%Y-%m-%d %H:%M:%S")
+        prediction.index.name = "date"
+
+        # Convert the DataFrame to a dictionary
+        new_data = prediction.to_dict(orient="index")
+
+        # Update existing data with the new day's prediction
+        existing_data.update(new_data)
+
+        # Write the updated data back to the JSON file
+        with open(file_path, "w") as file:
+            json.dump(existing_data, file, indent=2)
+
+        # existing_data to csv file
+        existing_data_df = pd.DataFrame.from_dict(existing_data, orient="index")
+        existing_data_df.to_csv(
+            os.path.join(path_name, f"prediction_{study_name}.csv")
+        )
+
+    # with Pool(max(os.cpu_count() // 4, 1)) as p:
+    #     _ = p.map(runoneday, inputlist)
+
+
 # iterate over all xy studies
-for i, study in enumerate(load_studies(base_name="FINAL_DE_selection_prob_jsu", count=4)):
-    best_params = study.best_params
-    
-
-
-
-
-
+for study, study_name in load_studies(base_name="FINAL_DE_selection_prob_jsu", count=4):
+    print(f"Using study {study_name}")
+    use_study(study, study_name)
+    # todo run studies in parallel
