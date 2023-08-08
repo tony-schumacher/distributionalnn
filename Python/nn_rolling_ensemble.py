@@ -14,12 +14,13 @@ import optuna
 import time
 from multiprocessing import Pool
 import json
+from helpers import load_studies
 
 # Accepts arguments:
 #     cty (currently only DE), default: DE
 #     distribution (Normal, StudentT, JSU, SinhArcsinh and NormalInverseGaussian), default: Normal
 
-distribution = "Normal"
+distribution = "JSU"
 paramcount = {
     "Normal": 2,
     "StudentT": 3,
@@ -35,20 +36,10 @@ INP_SIZE = 221
 cty = "DE"
 
 if len(sys.argv) > 1:
-    cty = sys.argv[1]
-if len(sys.argv) > 2:
-    distribution = sys.argv[2]
+    print("Arguments are disabled for this script")
 
-# if not os.path.exists(f'../forecasts_probNN_{distribution.lower()}'):
-#     os.mkdir(f'../forecasts_probNN_{distribution.lower()}')
 
-# if not os.path.exists(f'../distparams_probNN_{distribution.lower()}'):
-#     os.mkdir(f'../distparams_probNN_{distribution.lower()}')
-
-# if not os.path.exists(f'../trialfiles'):
-#     os.mkdir(f'../trialfiles')
-
-print(cty, distribution)
+print("DDNN rolling ensemble", cty, distribution)
 
 if cty != "DE":
     raise ValueError("Incorrect country")
@@ -353,58 +344,12 @@ def runoneday(inp):
     return predDF
 
 
-optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-study_name = f"FINAL_DE_selection_prob_{distribution.lower()}"  # 'on_new_data_no_feature_selection'
-storage_name = f"sqlite:///../trialfiles/{study_name}"
-study = optuna.create_study(
-    study_name=study_name, storage=storage_name, load_if_exists=True
-)
-# print(study.trials_dataframe())
-best_params = study.best_params
-# print(best_params)
+# iterate over all xy studies
+for i, study in enumerate(load_studies(base_name="FINAL_DE_selection_prob_jsu", count=4)):
+    best_params = study.best_params
+    
 
 
-inputlist = [(best_params, day) for day in range(0, len(data) // 24 - training_days)]
 
 
-file_name = "prediction_DDNN.json"
-path_name = f"../forecasts_ddnn"
-file_path = os.path.join(path_name, file_name)
-# create directory if it does not exist
-if not os.path.exists(path_name):
-    os.mkdir(path_name)
 
-# Read existing data from the JSON file
-if os.path.exists(file_path):
-    with open(file_path, 'r') as file:
-        existing_data = json.load(file)
-else:
-    existing_data = {}
-
-for e in inputlist:
-    prediction = runoneday(e)
-    print(prediction)
-
-    # Convert the index to a DateTime object (if it's in Unix timestamp format)
-    prediction.index = pd.to_datetime(prediction.index, unit="ms")
-
-    # Convert the entire index to strings in your desired format (e.g., "YYYY-MM-DD HH:MM:SS")
-    prediction.index = prediction.index.strftime("%Y-%m-%d %H:%M:%S")
-    prediction.index.name = "date"
-
-    # Convert the DataFrame to a dictionary
-    new_data = prediction.to_dict(orient='index')
-
-    # Update existing data with the new day's prediction
-    existing_data.update(new_data)
-
-    # Write the updated data back to the JSON file
-    with open(file_path, 'w') as file:
-        json.dump(existing_data, file, indent=2)
-
-    # existing_data to csv file
-    existing_data_df = pd.DataFrame.from_dict(existing_data, orient='index')
-    existing_data_df.to_csv(os.path.join(path_name, "prediction_DDNN.csv"))
-
-# with Pool(max(os.cpu_count() // 4, 1)) as p:
-#     _ = p.map(runoneday, inputlist)
