@@ -390,6 +390,7 @@ for e in inputlist:
 
     # Convert the entire index to strings in your desired format (e.g., "YYYY-MM-DD HH:MM:SS")
     prediction.index = prediction.index.strftime("%Y-%m-%d %H:%M:%S")
+    prediction.index.name = "date"
 
     # Convert the DataFrame to a dictionary
     new_data = prediction.to_dict(orient='index')
@@ -400,6 +401,10 @@ for e in inputlist:
     # Write the updated data back to the JSON file
     with open(file_path, 'w') as file:
         json.dump(existing_data, file, indent=2)
+
+    # existing_data to csv file
+    existing_data_df = pd.DataFrame.from_dict(existing_data, orient='index')
+    existing_data_df.to_csv(os.path.join(path_name, "prediction_DDNN.csv"))
 
 # with Pool(max(os.cpu_count() // 4, 1)) as p:
 #     _ = p.map(runoneday, inputlist)
