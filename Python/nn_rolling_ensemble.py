@@ -5,13 +5,10 @@ import tensorflow as tf
 
 import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
-from datetime import datetime, timedelta
+from datetime import datetime
 from tensorflow import keras
-import logging
 import sys
 import os
-import optuna
-import time
 from multiprocessing import Pool
 import json
 from helpers import load_studies, ensamble_forecast
@@ -420,7 +417,7 @@ if __name__ == "__main__":
     print("Run only with 1 pool")
 
     # Use a Pool with 4 processes to run the use_studies function in parallel
-    with Pool(1) as p:
+    with Pool(study_count) as p:
         _ = p.map(use_study, study_configs)
         print("Finished running use_study in parallel")
     
