@@ -41,6 +41,9 @@ if len(sys.argv) > 1:
 
 print("DDNN rolling ensemble", cty, distribution)
 
+
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+
 if cty != "DE":
     raise ValueError("Incorrect country")
 if distribution not in paramcount:
