@@ -54,7 +54,7 @@ data.index = [datetime.strptime(e, "%Y-%m-%d %H:%M:%S") for e in data.index]
 forecast_id = "2"
 path_name = f"../forecasts_ddnn_{forecast_id}"
 days_to_predict = 200
-stop_after = 10 # TODO DELTE LATER
+stop_after = 100 # TODO DELTE LATER
 training_days = len(data) // 24 - days_to_predict
 
 
@@ -411,6 +411,11 @@ if __name__ == "__main__":
     study_configs = load_studies(
         base_name="FINAL_DE_selection_prob_jsu", count=study_count
     )
+
+    # print the best params for each study
+    for study_config in study_configs:
+        study, study_name = study_config
+        print(f"Study {study_name} best params: {study.best_params}")
 
     # Use a Pool with 4 processes to run the use_studies function in parallel
     with Pool(4) as p:
