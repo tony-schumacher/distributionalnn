@@ -74,16 +74,29 @@ def ensamble_forecast(directory):
 
     # Add the original values from other models
     for i, df in enumerate(dfs[1:], 2):
-        ensembled_df[f'forecast_m{i}'] = df['forecast']
+        ensembled_df[f"forecast_m{i}"] = df["forecast"]
 
     # Calculate the ensembled forecast
     ensembled_df["forecast_ensembled"] = sum(df["forecast"] for df in dfs) / len(dfs)
-    ensembled_df["lower_bound_90_ensembled"] = sum(df["lower_bound_90"] for df in dfs) / len(dfs)
-    ensembled_df["upper_bound_90_ensembled"] = sum(df["upper_bound_90"] for df in dfs) / len(dfs)
+    ensembled_df["lower_bound_90_ensembled"] = sum(
+        df["lower_bound_90"] for df in dfs
+    ) / len(dfs)
+    ensembled_df["upper_bound_90_ensembled"] = sum(
+        df["upper_bound_90"] for df in dfs
+    ) / len(dfs)
+    ensembled_df["bound_50_ensembled"] = sum(df["bound_50"] for df in dfs) / len(dfs)
 
     # Select only the desired columns
-    final_columns = ['real'] + [f'forecast_m{i}' for i in range(1, len(dfs) + 1)] + \
-                    ['forecast_ensembled', 'lower_bound_90_ensembled', 'upper_bound_90_ensembled']
+    final_columns = (
+        ["real"]
+        + [f"forecast_m{i}" for i in range(1, len(dfs) + 1)]
+        + [
+            "forecast_ensembled",
+            "bound_50_ensembled",
+            "lower_bound_90_ensembled",
+            "upper_bound_90_ensembled",
+        ]
+    )
     ensembled_df = ensembled_df[final_columns]
 
     # Save to CSV

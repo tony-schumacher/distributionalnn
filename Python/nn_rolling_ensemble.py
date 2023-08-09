@@ -342,12 +342,15 @@ def runoneday(inp):
     # Calculate the 5th and 95th percentiles for each hour to get the 90% Prediction Intervals
     lower_bound_90 = np.percentile(pred, 5, axis=0)
     upper_bound_90 = np.percentile(pred, 95, axis=0)
+    bound_50 = np.percentile(pred, 50, axis=0)
 
     # add the 90% Prediction Intervals to the dataframe
     predDF["lower_bound_90"] = pd.NA
     predDF["upper_bound_90"] = pd.NA
+    predDF["bound_50"] = pd.NA
     predDF.loc[predDF.index[:], "lower_bound_90"] = lower_bound_90
     predDF.loc[predDF.index[:], "upper_bound_90"] = upper_bound_90
+    predDF.loc[predDF.index[:], "bound_50"] = bound_50
 
     return predDF
 
