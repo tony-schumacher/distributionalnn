@@ -44,6 +44,11 @@ print("DDNN rolling ensemble", cty, distribution)
 
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+if physical_devices:
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+
 if cty != "DE":
     raise ValueError("Incorrect country")
 if distribution not in paramcount:
