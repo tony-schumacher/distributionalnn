@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
-import tensorflow.compat.v2 as tf
+import tensorflow as tf
 
-tf.enable_v2_behavior()
+
 import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
 from datetime import datetime, timedelta
-import tensorflow.compat.v2.keras as keras
+from tensorflow import keras
 import logging
 import sys
 import os

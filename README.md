@@ -11,8 +11,8 @@ First 4 years (1456 days) split into
 
 
 ```
-pip install tensorflow-probability
-pip install optuna
+python3 -m pip install -r requirements.txt
+
 
 
 ``
