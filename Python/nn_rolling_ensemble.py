@@ -14,7 +14,7 @@ import optuna
 import time
 from multiprocessing import Pool
 import json
-from helpers import load_studies
+from helpers import load_studies, ensamble_forecast
 
 # Accepts arguments:
 #     cty (currently only DE), default: DE
@@ -50,8 +50,18 @@ if distribution not in paramcount:
 data = pd.read_csv(f"../Datasets/{cty}.csv", index_col=0)
 data.index = [datetime.strptime(e, "%Y-%m-%d %H:%M:%S") for e in data.index]
 
-days_to_predict = 10
+
+forecast_id = "2"
+path_name = f"../forecasts_ddnn_{forecast_id}"
+days_to_predict = 200
+stop_after = 10 # TODO DELTE LATER
 training_days = len(data) // 24 - days_to_predict
+
+
+# create directory if it does not exist
+if not os.path.exists(path_name):
+    os.mkdir(path_name)
+
 
 
 print("Days in data set:", (len(data) // 24))
@@ -339,8 +349,6 @@ def runoneday(inp):
     predDF.loc[predDF.index[:], "lower_bound_90"] = lower_bound_90
     predDF.loc[predDF.index[:], "upper_bound_90"] = upper_bound_90
 
-    # np.savetxt(os.path.join(f'../forecasts_probNN_{distribution.lower()}', file_name), pred, delimiter=',', fmt='%.3f')
-
     return predDF
 
 
@@ -352,12 +360,8 @@ def use_study(study_config):
     ]
 
     file_name = f"prediction_{study_name}.json"
-    path_name = "../forecasts_ddnn"
     file_path = os.path.join(path_name, file_name)
-    # create directory if it does not exist
-    if not os.path.exists(path_name):
-        os.mkdir(path_name)
-
+    
     # Read existing data from the JSON file
     if os.path.exists(file_path):
         with open(file_path, "r") as file:
@@ -366,6 +370,10 @@ def use_study(study_config):
         existing_data = {}
 
     for e in inputlist:
+        # stop after stop_after days
+        if len(existing_data) >= stop_after * 24:
+            print("Stopping after ", stop_after, " days")
+            break
         prediction = runoneday(e)
         print(prediction)
 
@@ -394,12 +402,17 @@ def use_study(study_config):
     #     _ = p.map(runoneday, inputlist)
 
 
-
-
-if __name__ == '__main__':
+# Run the use_study function for each study in parallel
+if __name__ == "__main__":
     study_count = 4
-    study_configs = load_studies(base_name="FINAL_DE_selection_prob_jsu", count=study_count)
+    study_configs = load_studies(
+        base_name="FINAL_DE_selection_prob_jsu", count=study_count
+    )
 
     # Use a Pool with 4 processes to run the use_studies function in parallel
     with Pool(4) as p:
         _ = p.map(use_study, study_configs)
+        print("Finished running use_study in parallel")
+    
+    # calculate the ensemble forecast
+    ensamble_forecast(path_name)
