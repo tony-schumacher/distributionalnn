@@ -415,13 +415,10 @@ if __name__ == "__main__":
         base_name="FINAL_DE_selection_prob_jsu", count=study_count
     )
 
-    # print the best params for each study
-    for study_config in study_configs:
-        study, study_name = study_config
-        print(f"Study {study_name} best params: {study.best_params}")
+    print("Run only with 1 pool")
 
     # Use a Pool with 4 processes to run the use_studies function in parallel
-    with Pool(4) as p:
+    with Pool(1) as p:
         _ = p.map(use_study, study_configs)
         print("Finished running use_study in parallel")
     
