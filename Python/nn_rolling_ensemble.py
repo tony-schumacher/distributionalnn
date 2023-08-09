@@ -221,7 +221,7 @@ def runoneday(inp):
         outputs = keras.layers.Dense(24, activation="linear")(hidden)
         model = keras.Model(inputs=inputs, outputs=outputs)
         model.compile(
-            optimizer=keras.optimizers.Adam(params["learning_rate"]),
+            optimizer=keras.optimizers.legacy.Adam(params["learning_rate"]),
             loss="mae",
             metrics="mae",
         )
@@ -291,7 +291,7 @@ def runoneday(inp):
             raise ValueError(f"Incorrect distribution {distribution}")
         model = keras.Model(inputs=inputs, outputs=outputs)
         model.compile(
-            optimizer=keras.optimizers.Adam(params["learning_rate"]),
+            optimizer=keras.optimizers.legacy.Adam(params["learning_rate"]),
             loss=lambda y, rv_y: -rv_y.log_prob(y),
             metrics="mae",
         )
