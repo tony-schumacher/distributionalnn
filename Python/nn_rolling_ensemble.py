@@ -410,7 +410,7 @@ def use_study(study_config):
 
 # Run the use_study function for each study in parallel
 if __name__ == "__main__":
-    study_count = 4
+    study_count = 1 # 4
     study_configs = load_studies(
         base_name="FINAL_DE_selection_prob_jsu", count=study_count
     )
