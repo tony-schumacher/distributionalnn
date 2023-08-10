@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 
-
+import time
 import os
+start_time = time.time()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
 
@@ -57,9 +58,9 @@ data = pd.read_csv(f"../Datasets/{cty}.csv", index_col=0)
 data.index = [datetime.strptime(e, "%Y-%m-%d %H:%M:%S") for e in data.index]
 
 
-forecast_id = "2"
+forecast_id = "5"
 path_name = f"../forecasts_ddnn_{forecast_id}"
-days_to_predict = 200
+days_to_predict = 80
 stop_after = 5 # TODO DELTE LATER
 training_days = len(data) // 24 - days_to_predict
 
@@ -334,8 +335,6 @@ def runoneday(inp):
         }
     params = {k: [float(e) for e in v.numpy()[0]] for k, v in getters.items()}
 
-    file_name = datetime.strftime(df.index[-24], "%Y-%m-%d")
-    # json.dump(params, open(os.path.join(f'../distparams_probNN_{distribution.lower()}', f'{file_name}.json'), 'w'))
     pred = model.predict(np.tile(Xf, (10000, 1)))
     predDF = pd.DataFrame(index=df.index[-24:])
     predDF["real"] = df.loc[df.index[-24:], "Price"].to_numpy()
@@ -413,12 +412,12 @@ def use_study(study_config):
 
 # Run the use_study function for each study in parallel
 if __name__ == "__main__":
-    study_count = 1 # 4
+    study_count = 4 # 4
     study_configs = load_studies(
         base_name="FINAL_DE_selection_prob_jsu", count=study_count
     )
 
-    print("Run only with 1 pool")
+    print("Run only with", study_count,  "pool")
 
     # Use a Pool with 4 processes to run the use_studies function in parallel
     with Pool(study_count) as p:
@@ -429,3 +428,6 @@ if __name__ == "__main__":
     
     # calculate the ensemble forecast
     ensamble_forecast(path_name)
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time:.2f} seconds")
