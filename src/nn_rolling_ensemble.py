@@ -1,5 +1,9 @@
 import pandas as pd
 import numpy as np
+
+
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
 
 
@@ -8,7 +12,7 @@ from tensorflow_probability import distributions as tfd
 from datetime import datetime
 from tensorflow import keras
 import sys
-import os
+
 from multiprocessing import Pool
 import json
 from helpers import load_studies, ensamble_forecast
@@ -56,7 +60,7 @@ data.index = [datetime.strptime(e, "%Y-%m-%d %H:%M:%S") for e in data.index]
 forecast_id = "2"
 path_name = f"../forecasts_ddnn_{forecast_id}"
 days_to_predict = 200
-stop_after = 100 # TODO DELTE LATER
+stop_after = 5 # TODO DELTE LATER
 training_days = len(data) // 24 - days_to_predict
 
 
@@ -418,6 +422,8 @@ if __name__ == "__main__":
 
     # Use a Pool with 4 processes to run the use_studies function in parallel
     with Pool(study_count) as p:
+        # export each bestparam to a json file
+
         _ = p.map(use_study, study_configs)
         print("Finished running use_study in parallel")
     
