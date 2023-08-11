@@ -1,0 +1,5 @@
+,Coal,Dummy,EUA,Gas,Oil,RES_D,RES_D-1,activation_1,activation_2,dropout,learning_rate,load_D,load_D-1,load_D-7,neurons_1,neurons_2,price_D-1,price_D-2,price_D-3,price_D-7,regularize_h1_activation,regularize_h1_kernel,regularize_h2_activation,regularize_h2_kernel,regularize_loc,regularize_scale,regularize_skewness,regularize_tailweight,h2_activation_rate_l1,tailweight_rate_l1
+0,False,True,False,True,True,True,True,softplus,relu,False,0.00030440838009111124,True,True,True,565,962,True,False,False,False,False,False,False,False,False,False,False,False,,
+1,True,True,True,False,False,True,True,elu,elu,False,0.0003156319034912295,True,True,False,940,58,True,True,False,True,False,False,True,False,False,False,False,True,1.005902636613844e-05,0.22827197038385383
+2,False,True,False,True,True,True,True,softplus,elu,False,0.000281493495779889,True,False,True,243,895,True,False,False,False,False,False,False,False,False,False,False,False,,
+3,True,False,True,True,False,True,True,softplus,elu,False,0.00023251758238566935,True,False,False,123,668,True,True,False,False,False,False,False,False,False,False,False,False,,

@@ -58,10 +58,10 @@ data = pd.read_csv(f"../Datasets/{cty}.csv", index_col=0)
 data.index = [datetime.strptime(e, "%Y-%m-%d %H:%M:%S") for e in data.index]
 
 
-forecast_id = "5"
+forecast_id = "7"
 path_name = f"../forecasts_ddnn_{forecast_id}"
-days_to_predict = 80
-stop_after = 5 # TODO DELTE LATER
+days_to_predict = 40
+stop_after = 14 # TODO DELTE LATER
 training_days = len(data) // 24 - days_to_predict
 
 
